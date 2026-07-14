@@ -11,6 +11,13 @@ def run_chat():
     system_message = "Your name is Alex. You are a helpful and friendly assistant who helps students learn about technology and computer science. You explain things clearly and always encourage curiosity."
     history = []
 
+    total_input_tokens = 0
+    total_output_tokens = 0
+    total_cost_cents = 0.0
+
+    INPUT_COST_PER_TOKEN = 0.25 / 1_000_000
+    OUTPUT_COST_PER_TOKEN = 1.25 / 1_000_000
+
     while True:
         user_input = input('>> ')
 
@@ -28,13 +35,35 @@ def run_chat():
         )
 
         reply = response.content[0].text
-        print(f'Claude: {reply}')
+        print(f'\nClaude: {reply}\n')
         history.append({'role': 'assistant', 'content': reply})
 
-run_chat()
+        # tgis is bonuss 1
+        in_tokens = response.usage.input_tokens
+        out_tokens = response.usage.output_tokens
+        turn_total = in_tokens + out_tokens
+
+        # this is bonuss 2
+        total_input_tokens += in_tokens
+        total_output_tokens += out_tokens
+        session_total_tokens = total_input_tokens + total_output_tokens
+
+        # this is bonuss 3
+        turn_cost_cents = ((in_tokens * INPUT_COST_PER_TOKEN) + (out_tokens * OUTPUT_COST_PER_TOKEN)) * 100
+        total_cost_cents += turn_cost_cents
+
+        print("─" * 60)
+        print(f"  [This Turn]  In: {in_tokens} | Out: {out_tokens} | Total: {turn_total}")
+        print(f"  [Session]    In: {total_input_tokens} | Out: {total_output_tokens} | Total: {session_total_tokens}")
+        print(f"  [Est. Cost]  Turn: {turn_cost_cents:.5f}¢ | Session Total: {total_cost_cents:.5f}¢")
+        print("─" * 60 + "\n")
+
+if __name__ == '__main__':
+    run_chat()
 
 
-#reflectiom: the fact the code needs all previous messeges resonates with me bacause it ver y similair to watches, because once you take apart a watch and you want the reassemble it if you forget the smallest nut screw or spring it will all fall apart
-#load.env: if you remove it you will have no API key in your code and it womnt run
-#almost nothingl change if you lower the temp to 07, just slightly deiffrent less creative responses, no real affect code wise, maybe mentally :)
-#if i remove history.append the bot wont remeber what he said,  willjust what the user said
+    #the tokens are sort of like how you buy something in a video game for say .99$, and again and again, because hey its under a dollar right? until its 500 dollars
+    #1,2,3:
+#1: AI gets full chat histry + your new msg. input_tokens jump up every single time.
+#2: Bot foregts its own last reply. Token count snowballs because old output becoms new input next  turn.
+#3: Nope, no diffrence. Printing is just for your eyes, the code logic works  exactely the same.
