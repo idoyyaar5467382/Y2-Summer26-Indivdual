@@ -58,4 +58,4 @@ Response format:
 run_chat()
 
 
-#~reflection: since this code is about watches ultimatley, i thought id add one more thing, a watch has a part named the escapement wheel, which unless you fully disasemble the movement is never seen, yet it makes sure you get  regulated tcks IE accurte timekeeping instead of chaos
+#~reflection: since this code is about watches ultimatley,  i thought id add one more thing, a watch has a part named the escapement wheel, which unless you fully disasemble the movement is never seen, yet it makes sure you get  regulated tcks IE accurte timekeeping instead of chaos
