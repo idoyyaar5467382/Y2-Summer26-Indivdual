@@ -8,15 +8,26 @@ client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
 
 def run_chat():
     print('You: (type exit to quit)')
-    system_message = "Your name is Alex. You are a helpful and friendly assistant who helps students learn about technology and computer science. You explain things clearly and always encourage curiosity."
+    
+    system_message = """
+You are WatchBot, a watch catalogue and encyclopedia.
+
+Your job is to tell the user about the watch they give you.
+
+Rules:
+- Never ask the user to clarify references or provide links; do 100% of the research on your own.
+- If a watch has multiple variants and the user didn't specify one, automatically assume they mean the most common reference.
+- You must silently use your web search tool to cross-reference specs and ensure they are correct before responding.
+- Always when talking about a watch, give a brief brand description, then the watch's production years, tell them about the  metal type and dial color, lug-to-lug, lug width, thickness, AND MAKE SURE TO DESCRIBE THE FINISHING LEVEL OF THE WATCH MOVEMENT (from entry level to mid range to high end to huete horolgrie) and the complications .
+- Never let them ask anything unrelated to watches. If they do, tell them to name a watch.
+
+
+Response format:
+- start with the name of the watch in **
+- Then give your response.
+- End with one follow-up question.
+"""
     history = []
-
-    total_input_tokens = 0
-    total_output_tokens = 0
-    total_cost_cents = 0.0
-
-    INPUT_COST_PER_TOKEN = 0.25 / 1_000_000
-    OUTPUT_COST_PER_TOKEN = 1.25 / 1_000_000
 
     while True:
         user_input = input('>> ')
@@ -31,39 +42,20 @@ def run_chat():
             max_tokens=300,
             temperature=0.7,
             system=system_message,
-            messages=history
+            messages=history,
+            tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 5}]
         )
 
-        reply = response.content[0].text
-        print(f'\nClaude: {reply}\n')
+        # Simple loop to safely extract text from the response
+        reply = ""
+        for block in response.content:
+            if block.type == "text":
+                reply += block.text
+
+        print(f'Claude: {reply}')
         history.append({'role': 'assistant', 'content': reply})
 
-        # tgis is bonuss 1
-        in_tokens = response.usage.input_tokens
-        out_tokens = response.usage.output_tokens
-        turn_total = in_tokens + out_tokens
-
-        # this is bonuss 2
-        total_input_tokens += in_tokens
-        total_output_tokens += out_tokens
-        session_total_tokens = total_input_tokens + total_output_tokens
-
-        # this is bonuss 3
-        turn_cost_cents = ((in_tokens * INPUT_COST_PER_TOKEN) + (out_tokens * OUTPUT_COST_PER_TOKEN)) * 100
-        total_cost_cents += turn_cost_cents
-
-        print("─" * 60)
-        print(f"  [This Turn]  In: {in_tokens} | Out: {out_tokens} | Total: {turn_total}")
-        print(f"  [Session]    In: {total_input_tokens} | Out: {total_output_tokens} | Total: {session_total_tokens}")
-        print(f"  [Est. Cost]  Turn: {turn_cost_cents:.5f}¢ | Session Total: {total_cost_cents:.5f}¢")
-        print("─" * 60 + "\n")
-
-if __name__ == '__main__':
-    run_chat()
+run_chat()
 
 
-    #the tokens are sort of like how you buy something in a video game for say .99$, and again and again, because hey its under a dollar right? until its 500 dollars
-    #1,2,3:
-#1: AI gets full chat histry + your new msg. input_tokens jump up every single time.
-#2: Bot foregts its own last reply. Token count snowballs because old output becoms new input next  turn.
-#3: Nope, no diffrence. Printing is just for your eyes, the code logic works  exactely the same.
+#~reflection: since this code is about watches ultimatley, i thought id add one more thing, a watch has a part named the escapement wheel, which unless you fully disasemble the movement is never seen, yet it makes sure you get  regulated tcks IE accurte timekeeping instead of chaos
